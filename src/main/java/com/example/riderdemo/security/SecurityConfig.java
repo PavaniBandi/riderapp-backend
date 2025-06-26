@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,19 +26,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // 1) we’re NOT using browser sessions or form-login
                 .csrf().disable()
                 .cors().and()
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin().disable() // ← disable default Spring form login
+                .httpBasic().disable() // ← disable HTTP Basic
+                // 2) public endpoints
                 .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/auth/**", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
                 )
-                .formLogin().disable() // ✅ Disable Spring login
-                .httpBasic().disable() // ✅ Disable basic auth
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(new Http403ForbiddenEntryPoint()));
+                // 3) custom entry point for unauthorized
+                .exceptionHandling(e -> e.authenticationEntryPoint(new Http403ForbiddenEntryPoint()));
 
+        // 4) our JWT filter (skips /auth/** inside shouldNotFilter())
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        http.headers().frameOptions().disable(); // for H2
+        http.headers().frameOptions().disable();    // allow H2 console
 
         return http.build();
     }
