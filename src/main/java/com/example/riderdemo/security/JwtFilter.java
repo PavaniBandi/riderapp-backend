@@ -25,16 +25,17 @@ public class JwtFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return path.startsWith("/auth");  // Skips filter for all /auth/** endpoints
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
             FilterChain chain)
             throws ServletException, IOException {
 
-        String path = request.getServletPath();
-        if (path.startsWith("/auth")) {
-            chain.doFilter(request, response);
-            return;
-        }
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
