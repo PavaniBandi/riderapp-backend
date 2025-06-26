@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 // @CrossOrigin(origins = "http://localhost:5173")
 @CrossOrigin(
-        origins = "http://localhost:5173",
+        origins = "https://riderapp-frontend.vercel.app",
         allowedHeaders = "*",
         allowCredentials = "true",
         methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
