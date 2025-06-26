@@ -24,17 +24,21 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
+        http
+                .csrf().disable()
                 .cors().and()
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
                 )
+                .formLogin().disable() // ✅ Disable Spring login
+                .httpBasic().disable() // ✅ Disable basic auth
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new Http403ForbiddenEntryPoint()));
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        http.headers().frameOptions().disable();
+        http.headers().frameOptions().disable(); // for H2
+
         return http.build();
     }
 
